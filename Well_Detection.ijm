@@ -235,10 +235,10 @@ function normalised_variance(StackID) {
 	
 	roiManager("Show All");
 	number_ROI = roiManager("count");
-	setBatchMode(true);
+	//setBatchMode(true);
 
 //Work through the ROI set and pick the most infocus slice for each ROI
-	for (k=0; k<frames; k++) { Stack.setFrame(k);
+	for (k=1; k<=frames; k++) { Stack.setFrame(k);
 	    for (z=0; z<number_ROI; z++){
 	        normVar = 0;
 	        normVar1 = 0;
@@ -286,7 +286,7 @@ function normalised_variance(StackID) {
 	run("Close");
 	selectWindow(StackID+"_Focused");
 	rename(StackID);
-	setBatchMode("exit and display");	
+	//setBatchMode("exit and display");	
 }
 
 function measure_stack(Image, ROI) {
