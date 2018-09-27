@@ -1,0 +1,12 @@
+library(ggplot2)
+
+setwd("/home/richardm/Downloads")
+
+data=read.csv("Summary Table.csv")
+attach(data)
+
+ggplot(data = data, aes(x = Frame, y = Red, group = Index)) + geom_line(colour="Red") + facet_wrap(~ Index) +
+    geom_line(data = data, mapping = aes(x = Frame, y = Green, group = Index), colour="Green") +
+    geom_line(data = data, mapping = aes(x = Frame, y = Blue, group = Index), colour ="Blue") +
+    geom_line(data = data, mapping = aes(x = Frame, y = Brightfield, group = Index), colour="Grey")
+
