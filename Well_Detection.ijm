@@ -23,6 +23,14 @@ Image = getTitle();
 Stack.getDimensions(width, height, channels, slices, frames);
 run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
 
+Dialog.create("Analysis Settings");
+Dialog.addMessage("Please review the following");
+Dialog.addCheckbox("Background Correction?", false);		//Subtract median autoflourescence
+Dialog.addCheckbox("Dark Signal Correction?", true);		//Subtract mean of dark image or no-cell background
+Dialog.show();
+subt = Dialog.getCheckbox();
+darkf = Dialog.getCheckbox();
+
 split_and_focus(Image);
 
 selectWindow("Brightfield");
@@ -34,6 +42,64 @@ run(type+"-bit");
 
 //link the wells
 link_wells(x_results, y_results, well_frame, well_diameter);
+
+//background subtract?
+if (subt == 1) {
+	waitForUser("Please select the control image of autoflourescence, set ROI (if required) and press OK");
+}
+
+back = getTitle;
+getDimensions(width, height, channelCount, sliceCount, frameCount);
+bchannels = channelCount;
+s = selectionType();
+
+if (s>-1) {
+	Roi.getBounds(x, y, width, height);
+	bx = x;
+	by = y;
+	bwidth = width;
+	bheight = height;
+} else {
+		getDimensions(width, height, channelCount, sliceCount, frameCount);
+		bx = 0;
+		by = 0;
+		bwidth = width;
+		bheight = height;
+}
+
+//dark signal?
+if (darkf == 1) {
+	waitForUser("Please select the control image or ROI for dark image subtraction");
+}
+
+darkfield = getTitle;
+getDimensions(width, height, channelCount, sliceCount, frameCount);
+dchannels = channelCount;
+s = selectionType();
+
+if (s>-1) {
+	Roi.getBounds(x, y, width, height);
+	dx = x;
+	dy = y;
+	dwidth = width;
+	dheight = height;
+} else {
+		getDimensions(width, height, channelCount, sliceCount, frameCount);
+		dx = 0;
+		dy = 0;
+		dwidth = width;
+		dheight = height;
+}
+
+if (subt == 1){
+	get_median(back, bx, by, bwidth, bheight, bchannels);
+	background(red, green);
+}
+
+if (darkf == 1){
+	get_mean(darkfield, dx, dy, dwidth, dheight, dchannels);
+	dark(red, green);
+}
 
 //measure intensities for each roi - loop through x-results and measure on x-y for each
 run("Set Measurements...", "mean redirect=None decimal=5");
@@ -144,6 +210,7 @@ roiManager("Show All with labels");
 				run("Table...", "name="+title2+" width=1000 height=300");
 				print(ptab,"\\Headings:Index\tX\tY\tDiameter\tScore\tFrame\tRed\tGreen\tBrightfield\tBlue");
 			}
+
 //populate the table
 for (k=0; k<x_results.length; k++) {
 	print(ptab,well_index[k]+"\t"+x_results[k]+"\t"+y_results[k]+"\t"+well_diameter[k]+"\t"+score[k]+"\t"+well_frame[k]+"\t"+red[k]+"\t"+green[k]+"\t"+brightfield[k]+"\t"+blue[k]);
@@ -428,4 +495,113 @@ function split_and_focus(image) {
 	//setBatchMode("exit and display");
 }
 
+function get_mean(image, x, y, width, height, channelCount) {
+
+	run("Measure");
+	run("Clear Results");
+	
+	setBatchMode(true);
+	run("Set Measurements...", "mean redirect=None decimal=3");
+	
+	if (channelCount < 2) {
+		exit("Error: Only one channel! Is this a multidimensional image?");
+		} else {//if (channels <= 2) {
+	
+	selectWindow(image);
+	run("Select None");
+	run("Duplicate...", "title=Background duplicate");
+	run("Split Channels");
+	selectWindow("C1-"+"Background");
+	rename("Background_Red");
+	makeRectangle(x, y, width, height);
+	run("Crop");
+	run("Measure");
+	run("Close");
+	mean_red = getResult("Mean", 0);
+	
+	selectWindow("C3-"+"Background");
+	rename("Background_Green");
+	makeRectangle(x, y, width, height);
+	run("Crop");
+	run("Measure");
+	run("Close");
+	mean_green = getResult("Mean", 1);
+	
+	if (isOpen("C2-"+"Background")) {
+		selectWindow("C2-"+"Background");
+		run("Close");
+		}
+	if (isOpen("Results")) {
+		selectWindow("Results");
+		//run("Close");
+		}
+	}
+	setBatchMode(false);
+}
+
+function get_median(image, x, y, width, height, channelCount) {
+
+	run("Measure");
+	run("Clear Results");
+	
+	setBatchMode(true);
+	run("Set Measurements...", "median redirect=None decimal=3");
+	
+	if (channelCount < 2) {
+		exit("Error: Only one channel! Is this a multidimensional image?");
+		} else {//if (channels <= 2) {
+	
+	selectWindow(image);
+	run("Select None");
+	run("Duplicate...", "title=Background duplicate");
+	run("Split Channels");
+	selectWindow("C1-"+"Background");
+	rename("Background_Red");
+	makeRectangle(x, y, width, height);
+	run("Crop");
+	run("Measure");
+	run("Close");
+	median_red = getResult("Median", 0);
+	
+	selectWindow("C3-"+"Background");
+	rename("Background_Green");
+	makeRectangle(x, y, width, height);
+	run("Crop");
+	run("Measure");
+	run("Close");
+	median_green = getResult("Median", 1);
+	
+	if (isOpen("C2-"+"Background")) {
+		selectWindow("C2-"+"Background");
+		run("Close");
+		}
+	if (isOpen("Results")) {
+		selectWindow("Results");
+		//run("Close");
+		}
+	}
+	setBatchMode(false);
+}
+
+function background(red, green) {
+//subtract median autoflourescence signal from cells
+//the function get_median gets these values
+	selectWindow(red);
+	run("Subtract...", "value=&median_red");
+	run("Enhance Contrast...", "saturated=0 normalize");
+	selectWindow(green);
+	run("Subtract...", "value=&median_green");
+	run("Enhance Contrast...", "saturated=0 normalize");
+}
+
+function dark(red, green) {
+//subtract the mean dark value from a reference image or no cell background
+//the function get_mean getsthese values
+	selectWindow(red);
+	run("Subtract...", "value=&mean_red");
+	run("Enhance Contrast...", "saturated=0 normalize");
+	selectWindow(green);
+	run("Subtract...", "value=&mean_green");
+	run("Enhance Contrast...", "saturated=0 normalize");
+}
 
