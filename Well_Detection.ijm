@@ -316,7 +316,7 @@ function detect_wells() {
 			well_frame = Array.concat(well_frame, i);
 		}
 	}
-exit();
+
 }
 
 function normalised_variance(StackID) {
