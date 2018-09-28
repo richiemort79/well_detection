@@ -27,9 +27,11 @@ Dialog.create("Analysis Settings");
 Dialog.addMessage("Please review the following");
 Dialog.addCheckbox("Background Correction?", false);		//Subtract median autoflourescence
 Dialog.addCheckbox("Dark Signal Correction?", true);		//Subtract mean of dark image or no-cell background
+Dialog.addCheckbox("Normalise intensity Values?", true);
 Dialog.show();
 subt = Dialog.getCheckbox();
 darkf = Dialog.getCheckbox();
+norm_i = Dialog.getCheckbox();
 
 split_and_focus(Image);
 
@@ -191,6 +193,63 @@ if (channels>3){
 
 roiManager("UseNames", "true");
 roiManager("Show All with labels");
+
+if (norm_i = 1) {
+
+	//normalise the intnesity values red
+	Array.getStatistics(red, min, max, mean, stdDev);
+	for (i=0; i<red.length; i++) {
+		red_v = red[i]-min;
+		addToArray(red_v, red, i);
+	}
+
+	Array.getStatistics(red, min, max, mean, stdDev);
+	for (i=0; i<red.length; i++) {
+		red_v2 = red[i]/max;
+		addToArray(red_v2, red, i);
+	}
+
+	//normalise the intnesity values green
+	Array.getStatistics(green, min, max, mean, stdDev);
+	for (i=0; i<green.length; i++) {
+		green_v = green[i]-min;
+		addToArray(green_v, green, i);
+	}
+
+	Array.getStatistics(green, min, max, mean, stdDev);
+	for (i=0; i<green.length; i++) {
+		green_v2 = green[i]/max;
+		addToArray(green_v2, green, i);
+	}
+
+	//normalise the intnesity values blue
+	Array.getStatistics(blue, min, max, mean, stdDev);
+	for (i=0; i<blue.length; i++) {
+		blue_v = blue[i]-min;
+		addToArray(blue_v, blue, i);
+	}
+
+
+	Array.getStatistics(blue, min, max, mean, stdDev);
+	for (i=0; i<blue.length; i++) {
+		blue_v2 = blue[i]/max;
+		addToArray(blue_v2, blue, i);
+	}
+
+	//normalise the intnesity values blue
+	Array.getStatistics(brightfield, min, max, mean, stdDev);
+	for (i=0; i<brightfield.length; i++) {
+		brightfield_v = brightfield[i]-min;
+		addToArray(brightfield_v, brightfield, i);
+	}
+
+	Array.getStatistics(brightfield, min, max, mean, stdDev);
+	for (i=0; i<brightfield.length; i++) {	
+		brightfield_v2 = brightfield[i]/max;
+		addToArray(brightfield_v2, brightfield, i);
+	}
+
+}
 
 //write the data to the results table
 //draws the summary table
@@ -605,3 +664,18 @@ function dark(red, green) {
 	run("Enhance Contrast...", "saturated=0 normalize");
 }
 
+//Adds the value to the array at the specified position, expanding if necessary
+//Returns the modified array
+function addToArray(value, array, position) {
+    if (position<lengthOf(array)) {
+        array[position]=value;
+    } else {
+        temparray=newArray(position+1);
+        for (i=0; i<lengthOf(array); i++) {
+            temparray[i]=array[i];
+        }
+        temparray[position]=value;
+        array=temparray;
+    }
+    return array;
+}
