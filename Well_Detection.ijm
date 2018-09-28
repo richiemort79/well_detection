@@ -28,10 +28,12 @@ Dialog.addMessage("Please review the following");
 Dialog.addCheckbox("Background Correction?", false);		//Subtract median autoflourescence
 Dialog.addCheckbox("Dark Signal Correction?", true);		//Subtract mean of dark image or no-cell background
 Dialog.addCheckbox("Normalise intensity Values?", true);
+Dialog.addCheckbox("Use Max Intensity Projection?", true);
 Dialog.show();
 subt = Dialog.getCheckbox();
 darkf = Dialog.getCheckbox();
 norm_i = Dialog.getCheckbox();
+max_ip = Dialog.getCheckbox();
 
 split_and_focus(Image);
 
@@ -194,7 +196,7 @@ if (channels>3){
 roiManager("UseNames", "true");
 roiManager("Show All with labels");
 
-if (norm_i = 1) {
+if (norm_i == 1) {
 
 	//normalise the intnesity values red
 	Array.getStatistics(red, min, max, mean, stdDev);
@@ -543,6 +545,17 @@ function split_and_focus(image) {
 	run("Duplicate...", "title=Duplicate duplicate");
 	run("Split Channels");
 
+	if (max_ip == 1) {
+	//name the channels and apply luts
+	for (i=0; i<channels; i++) {
+		selectWindow("C"+i+1+"-"+"Duplicate");
+		run("Z Project...", "projection=[Max Intensity] all");
+		run(luts[i]);
+		rename(names[i]);
+		resetMinAndMax;
+		}
+	//setBatchMode("exit and display");
+	} else {
 	//name the channels and apply luts
 	for (i=0; i<channels; i++) {
 		selectWindow("C"+i+1+"-"+"Duplicate");
@@ -552,6 +565,7 @@ function split_and_focus(image) {
 		resetMinAndMax;
 		}
 	//setBatchMode("exit and display");
+	}
 }
 
 function get_mean(image, x, y, width, height, channelCount) {
