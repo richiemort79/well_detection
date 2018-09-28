@@ -26,7 +26,7 @@ run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
 Dialog.create("Analysis Settings");
 Dialog.addMessage("Please review the following");
 Dialog.addCheckbox("Background Correction?", false);		//Subtract median autoflourescence
-Dialog.addCheckbox("Dark Signal Correction?", true);		//Subtract mean of dark image or no-cell background
+Dialog.addCheckbox("Dark Signal Correction?", false);		//Subtract mean of dark image or no-cell background
 Dialog.addCheckbox("Normalise intensity Values?", true);
 Dialog.addCheckbox("Use Max Intensity Projection?", true);
 Dialog.show();
@@ -307,7 +307,7 @@ function detect_wells() {
 
 	for (i=1; i<=slices; i++) {
 		Stack.setSlice(i);
-		run("Detect Circles", "min_diameter=&lower_d max_diameter=&upper_d min_score=120");
+		run("Detect Circles", "min_diameter=&lower_d max_diameter=&upper_d min_score=1200");
 		for  (j=0; j<nResults; j++) {
 			x_results = Array.concat(x_results, getResult("x", j));
 			y_results = Array.concat(y_results, getResult("y", j));
@@ -363,30 +363,37 @@ function normalised_variance(StackID) {
 	
 	roiManager("Show All");
 	number_ROI = roiManager("count");
+	print(number_ROI);
 	//setBatchMode(true);
 
 //Work through the ROI set and pick the most infocus slice for each ROI
-	for (k=1; k<=frames; k++) { Stack.setFrame(k);
+	for (k=1; k<=frames; k++) { 
+		Stack.setFrame(k);
+	    
 	    for (z=0; z<number_ROI; z++){
 	        normVar = 0;
 	        normVar1 = 0;
 	        m=0;
 	        mean=0;
 	        stdev=0;
+		    //roiManager("Select", z);
+		    
 		   for (l=1; l<=slices; l++){ 
 	               selectWindow(StackID);
 	               run("Select None");
 	               roiManager("Select", z);
 	               Stack.setFrame(k);
 	               Stack.setSlice(l);
+	               
 	               getStatistics(area, mean, min, max, std, histogram);
-	               normVar = std*std/mean;
+	               normVar = (std*std)/mean;
 	                  if (normVar>normVar1) { 
 		             m = l;
 		             normVar1=normVar;}
 		                else {normVar1 = normVar1;}
+		                
 		}
-
+		
 //Build a new stack of the in-focus tiles at each timepoint
 	selectWindow(StackID);
 	run("Select None");
@@ -548,12 +555,26 @@ function split_and_focus(image) {
 	if (max_ip == 1) {
 	//name the channels and apply luts
 	for (i=0; i<channels; i++) {
-		selectWindow("C"+i+1+"-"+"Duplicate");
-		run("Z Project...", "projection=[Max Intensity] all");
-		run(luts[i]);
-		rename(names[i]);
-		resetMinAndMax;
+		//if (i != 2) {
+			selectWindow("C"+i+1+"-"+"Duplicate");
+			run("Z Project...", "projection=[Max Intensity] all");
+			run(luts[i]);
+			rename(names[i]);
+			resetMinAndMax;
+			selectWindow("C"+i+1+"-"+"Duplicate");
+			run("Close");
+		//	} else {
+			//	normalised_variance("C"+i+1+"-"+"Duplicate");//still need to focus channel 3
+		//		run(luts[i]);
+		//		rename(names[i]);
+		//		resetMinAndMax;
+			//}
 		}
+	selectWindow("Brightfield");
+	//run("Sharpen");
+	run("Smooth");
+	run("Find Edges");
+	
 	//setBatchMode("exit and display");
 	} else {
 	//name the channels and apply luts
@@ -676,20 +697,4 @@ function dark(red, green) {
 	selectWindow(green);
 	run("Subtract...", "value=&mean_green");
 	run("Enhance Contrast...", "saturated=0 normalize");
-}
-
-//Adds the value to the array at the specified position, expanding if necessary
-//Returns the modified array
-function addToArray(value, array, position) {
-    if (position<lengthOf(array)) {
-        array[position]=value;
-    } else {
-        temparray=newArray(position+1);
-        for (i=0; i<lengthOf(array); i++) {
-            temparray[i]=array[i];
-        }
-        temparray[position]=value;
-        array=temparray;
-    }
-    return array;
 }
