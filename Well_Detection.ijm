@@ -307,7 +307,7 @@ function detect_wells() {
 
 	for (i=1; i<=slices; i++) {
 		Stack.setSlice(i);
-		run("Detect Circles", "min_diameter=&lower_d max_diameter=&upper_d min_score=1200");
+		run("Detect Circles", "min_diameter=&lower_d max_diameter=&upper_d min_score=120");
 		for  (j=0; j<nResults; j++) {
 			x_results = Array.concat(x_results, getResult("x", j));
 			y_results = Array.concat(y_results, getResult("y", j));
