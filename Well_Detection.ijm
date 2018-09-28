@@ -116,7 +116,7 @@ setBatchMode(true);
 //measure channel1
 for (i=0; i<x_results.length; i++) {
 		selectWindow("Red");
-		Stack.setSlice(well_frame[i]);
+		Stack.setFrame(well_frame[i]);
 		makeOval(x_results[i]-(well_diameter[i]/2), y_results[i]-(well_diameter[i]/2), well_diameter[i], well_diameter[i]);
 		run("Scale... ", "x=0.95 y=0.95 centered");
 		run("Measure");
@@ -129,7 +129,7 @@ for (i=0; i<x_results.length; i++) {
 //measure channel2
 for (i=0; i<x_results.length; i++) {
 		selectWindow("Green");
-		Stack.setSlice(well_frame[i]);
+		Stack.setFrame(well_frame[i]);
 		makeOval(x_results[i]-(well_diameter[i]/2), y_results[i]-(well_diameter[i]/2), well_diameter[i], well_diameter[i]);
 		run("Scale... ", "x=0.95 y=0.95 centered");
 		run("Measure");
@@ -142,7 +142,7 @@ for (i=0; i<x_results.length; i++) {
 //measure channel3
 for (i=0; i<x_results.length; i++) {
 		selectWindow("Brightfield");
-		Stack.setSlice(well_frame[i]);
+		Stack.setFrame(well_frame[i]);
 		makeOval(x_results[i]-(well_diameter[i]/2), y_results[i]-(well_diameter[i]/2), well_diameter[i], well_diameter[i]);
 		run("Scale... ", "x=0.95 y=0.95 centered");
 		run("Measure");
@@ -156,7 +156,7 @@ for (i=0; i<x_results.length; i++) {
 if (channels>3){
 for (i=0; i<x_results.length; i++) {
 		selectWindow("Blue");
-		Stack.setSlice(well_frame[i]);
+		Stack.setFrame(well_frame[i]);
 		makeOval(x_results[i]-(well_diameter[i]/2), y_results[i]-(well_diameter[i]/2), well_diameter[i], well_diameter[i]);
 		run("Scale... ", "x=0.95 y=0.95 centered");
 		run("Measure");
@@ -583,6 +583,7 @@ function split_and_focus(image) {
 		normalised_variance("C"+i+1+"-"+"Duplicate");
 		run(luts[i]);
 		rename(names[i]);
+		run("Re-order Hyperstack ...", "channels=[Channels (c)] slices=[Slices (z)] frames=[Frames (t)]");
 		resetMinAndMax;
 		}
 	//setBatchMode("exit and display");
