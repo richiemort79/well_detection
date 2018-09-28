@@ -42,7 +42,7 @@ type = bitDepth();
 //needs to be in 8-bit here
 run("8-bit");
 detect_wells();
-run(type+"-bit");
+//run(type+"-bit");
 
 //link the wells
 link_wells(x_results, y_results, well_frame, well_diameter);
@@ -50,7 +50,7 @@ link_wells(x_results, y_results, well_frame, well_diameter);
 //background subtract?
 if (subt == 1) {
 	waitForUser("Please select the control image of autoflourescence, set ROI (if required) and press OK");
-}
+
 
 back = getTitle;
 getDimensions(width, height, channelCount, sliceCount, frameCount);
@@ -69,12 +69,13 @@ if (s>-1) {
 		by = 0;
 		bwidth = width;
 		bheight = height;
+	}
 }
 
 //dark signal?
 if (darkf == 1) {
 	waitForUser("Please select the control image or ROI for dark image subtraction");
-}
+
 
 darkfield = getTitle;
 getDimensions(width, height, channelCount, sliceCount, frameCount);
@@ -93,6 +94,7 @@ if (s>-1) {
 		dy = 0;
 		dwidth = width;
 		dheight = height;
+} 
 }
 
 if (subt == 1){
@@ -583,7 +585,7 @@ function split_and_focus(image) {
 		normalised_variance("C"+i+1+"-"+"Duplicate");
 		run(luts[i]);
 		rename(names[i]);
-		run("Re-order Hyperstack ...", "channels=[Channels (c)] slices=[Slices (z)] frames=[Frames (t)]");
+		run("Re-order Hyperstack ...", "channels=[Channels (c)] slices=[Frames (t)] frames=[Slices (z)]");
 		resetMinAndMax;
 		}
 	//setBatchMode("exit and display");
