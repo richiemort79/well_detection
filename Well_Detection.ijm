@@ -305,8 +305,8 @@ function detect_wells() {
 
 	Stack.getDimensions(width, height, channels, slices, frames);
 
-	for (i=1; i<=slices; i++) {
-		Stack.setSlice(i);
+	for (i=1; i<=frames; i++) {
+		Stack.setFrame(i);
 		run("Detect Circles", "min_diameter=&lower_d max_diameter=&upper_d min_score=120");
 		for  (j=0; j<nResults; j++) {
 			x_results = Array.concat(x_results, getResult("x", j));
@@ -316,7 +316,7 @@ function detect_wells() {
 			well_frame = Array.concat(well_frame, i);
 		}
 	}
-
+exit();
 }
 
 function normalised_variance(StackID) {
@@ -572,8 +572,8 @@ function split_and_focus(image) {
 		}
 	selectWindow("Brightfield");
 	//run("Sharpen");
-	run("Smooth");
-	run("Find Edges");
+	run("Smooth", "stack");
+	run("Find Edges", "stack");
 	
 	//setBatchMode("exit and display");
 	} else {
